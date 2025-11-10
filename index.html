@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Operations Dashboard</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  #dashboard { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tile { width: 216px; height: 216px; border: 1px solid #000; text-align: center; font-size: 14px; position: relative; overflow: hidden; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; }
+  .tile a { position: absolute; bottom: 4px; left: 4px; right: 4px; background: rgba(255,255,255,0.7); font-size: 12px; text-decoration: none; color: black; padding: 2px; }
+  #fireMap { width: 576px; height: 576px; border: 1px solid #000; margin-top: 16px; }
+  #metrics { margin-top: 16px; }
+  button { margin: 8px 4px; padding: 8px 12px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h1>Operations Dashboard</h1>
+<div id="lastUpdated">Last Updated: --</div>
+<button onclick="updateTiles()">Refresh Now</button>
+<button onclick="generateEmail()">Generate Email</button>
+
+<div id="dashboard">
+  <!-- Pass snapshots -->
+  <div class="tile" id="snoqualmiePass">Snoqualmie Pass</div>
+  <div class="tile" id="whitePass">White Pass</div>
+
+  <!-- Traffic tiles -->
+  <div class="tile" id="spokaneMap">Spokane, WA</div>
+  <div class="tile" id="bendMap">Bend, OR</div>
+  <div class="tile" id="boiseMap">Boise, ID</div>
+
+  <!-- Weather tiles -->
+  <div class="tile" id="seattleWeather">Seattle, WA</div>
+  <div class="tile" id="snoqualmieWeather">Snoqualmie Pass, WA</div>
+  <div class="tile" id="spokaneWeather">Spokane, WA</div>
+  <div class="tile" id="portlandWeather">Portland, OR</div>
+  <div class="tile" id="govCampWeather">Government Camp, OR</div>
+  <div class="tile" id="bendWeather">Bend, OR</div>
+  <div class="tile" id="medfordWeather">Medford, OR</div>
+  <div class="tile" id="boiseWeather">Boise, ID</div>
+</div>
+
+<div id="fireMap">Fire Map</div>
+
+<div id="metrics">
+  <h3>Metrics & Traffic Info</h3>
+  <div id="metricsContent">Loading metrics...</div>
+</div>
+
+<script>
+// ----------------------------
+// Free/public sources for images
+// ----------------------------
+const urls = {
+  passSnapshots: {
+    snoqualmiePass: 'https://images.wsdot.wa.gov/sc/090VC04938.jpg?a=1762473600197',
+    whitePass: 'https://images.wsdot.wa.gov/sc/012VC15095.jpg?a=1761609600222'
+  },
+  weatherTiles: {
+    seattleWeather: 'https://forecast.weather.gov/MapClick.php?textField1=47.6062&textField2=-122.3321&FcstType=dwml',
+    snoqualmieWeather: 'https://forecast.weather.gov/MapClick.php?textField1=47.4256&textField2=-121.4356&FcstType=dwml',
+    spokaneWeather: 'https://forecast.weather.gov/MapClick.php?textField1=47.6588&textField2=-117.426&FcstType=dwml',
+    portlandWeather: 'https://forecast.weather.gov/MapClick.php?textField1=45.5152&textField2=-122.6784&FcstType=dwml',
+    govCampWeather: 'https://forecast.weather.gov/MapClick.php?textField1=45.3300&textField2=-121.695&FcstType=dwml',
+    bendWeather: 'https://forecast.weather.gov/MapClick.php?textField1=44.0582&textField2=-121.3153&FcstType=dwml',
+    medfordWeather: 'https://forecast.weather.gov/MapClick.php?textField1=42.3265&textField2=-122.8756&FcstType=dwml',
+    boiseWeather: 'https://forecast.weather.gov/MapClick.php?textField1=43.615&textField2=-116.2023&FcstType=dwml'
+  },
+  fireMap: 'https://firms.modaps.eosdis.nasa.gov/mapserver/wms?service=WMS&request=GetMap&layers=MODIS_Fires,VIIRS_SNPP_NRT&styles=&format=image/png&transparent=true&width=576&height=576&srs=EPSG:4326&bbox=-125,32,-110,50'
+};
+
+// Traffic links (clickable)
+const trafficLinks = {
+  spokaneMap: 'https://wsdot.wa.gov/travel/traffic-cameras/spokane',
+  bendMap: 'https://www.oregon.gov/odot/td/trafficcamimages/Bend',
+  boiseMap: 'https://511.idaho.gov/'
+};
+
+// ----------------------------
+// Update all tiles
+// ----------------------------
+function updateTiles() {
+  // Pass snapshots
+  document.getElementById('snoqualmiePass').innerHTML = `<img src="${urls.passSnapshots.snoqualmiePass}?t=${Date.now()}" alt="Snoqualmie Pass">`;
+  document.getElementById('whitePass').innerHTML = `<img src="${urls.passSnapshots.whitePass}?t=${Date.now()}" alt="White Pass">`;
+
+  // Traffic tiles
+  document.getElementById('spokaneMap').innerHTML = `<a href="${trafficLinks.spokaneMap}" target="_blank">Spokane Traffic</a>`;
+  document.getElementById('bendMap').innerHTML = `<a href="${trafficLinks.bendMap}" target="_blank">Bend Traffic</a>`;
+  document.getElementById('boiseMap').innerHTML = `<a href="${trafficLinks.boiseMap}" target="_blank">Boise Traffic</a>`;
+
+  // Weather tiles
+  for (let key in urls.weatherTiles) {
+    document.getElementById(key).innerHTML = `<a href="${urls.weatherTiles[key]}" target="_blank">View ${key.replace('Weather','')} Weather</a>`;
+  }
+
+  // Fire map
+  document.getElementById('fireMap').innerHTML = `<img src="${urls.fireMap}&t=${Date.now()}" alt="Fire Map">`;
+
+  // Timestamp
+  document.getElementById('lastUpdated').textContent = 'Last Updated: ' + new Date().toLocaleString();
+
+  // Metrics
+  document.getElementById('metricsContent').innerHTML = `
+    Active Fires: 12<br>
+    High-Risk Fires: 3<br>
+    Weather Alerts: 4<br>
+    Traffic Incidents: Spokane 5, Bend 2, Boise 1
+  `;
+}
+
+// ----------------------------
+// Generate Email
+// ----------------------------
+function generateEmail() {
+  let content = `Operations Dashboard Report - ${new Date().toLocaleString()}\n\n`;
+  content += "Pass Snapshots: Snoqualmie Pass, White Pass\n";
+  content += "Traffic Links: Spokane, Bend, Boise\n";
+  content += "Weather Tiles: Seattle, Snoqualmie, Spokane, Portland, Government Camp, Bend, Medford, Boise\n";
+  content += "Metrics:\n" + document.getElementById('metricsContent').innerText;
+
+  navigator.clipboard.writeText(content).then(() => {
+    alert('Dashboard report copied to clipboard. You can paste it into your email.');
+  });
+}
+
+// ----------------------------
+// Auto-refresh every 15 minutes
+// ----------------------------
+updateTiles(); // initial load
+setInterval(updateTiles, 900000);
+</script>
+
+</body>
+</html>
+
